@@ -1,0 +1,15 @@
+group 'TeamCityAPI'
+version '0.1'
+
+apply plugin: 'java'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile 'org.jsoup:jsoup:1.11.3'
+    compile group: 'org.apache.poi', name: 'poi', version: '3.12'
+    compile group: 'org.apache.poi', name: 'poi-ooxml', version: '3.17'
+    compile group: 'org.testng', name: 'testng', version: '6.9.10'
+}
