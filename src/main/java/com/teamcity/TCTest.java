@@ -10,10 +10,12 @@ public class TCTest {
     private final String parameters;
     private final String stackTrace;
     private final TCStatus status;
+    private final LocalDateTime startDateTime;
 
-    public TCTest(String parameters, String stackTrace, TCStatus status) {
+    public TCTest(String parameters, String stackTrace, LocalDateTime startDateTime, TCStatus status) {
         this.parameters = parameters;
         this.stackTrace = stackTrace;
+        this.startDateTime = startDateTime;
         this.status = status;
     }
 
@@ -27,5 +29,9 @@ public class TCTest {
 
     public TCStatus getStatus() {
         return status;
+    }
+
+    public LocalDateTime getStartDateTime() {
+        return startDateTime;
     }
 }

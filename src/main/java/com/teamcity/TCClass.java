@@ -30,20 +30,16 @@ public class TCClass {
         return size;
     }
 
-    public void addTest(String methodName, String parameters, String stackTrace, LocalDateTime startTime, TCStatus status) {
+    public void addTest(String methodName, String parameters, String stackTrace, LocalDateTime startDateTime, TCStatus status) {
         for (TCMethod method : methods) {
             if (method.getMethodName().equals(methodName)) {
-                method.addTest(parameters, stackTrace, status);
+                method.addTest(parameters, stackTrace, startDateTime, status);
                 return;
             }
         }
 
         TCMethod tcMethod = new TCMethod(methodName);
-        tcMethod.addTest(parameters, stackTrace, status);
-        methods.add(tcMethod);
-    }
-
-    public void addMethod(TCMethod tcMethod) {
+        tcMethod.addTest(parameters, stackTrace, startDateTime, status);
         methods.add(tcMethod);
     }
 
@@ -71,6 +67,21 @@ public class TCClass {
 
     public List<TCMethod> getMethods() {
         return methods;
+    }
+
+    public void addMethods(TCClass resultClass) {
+        for (TCMethod resultMethod : resultClass.getMethods())
+            addTCMethod(resultMethod);
+    }
+
+    private void addTCMethod(TCMethod resultMethod) {
+        for (TCMethod tcMethod : methods) {
+            if (tcMethod.equals(resultMethod)) {
+                tcMethod.addTCMethod(resultMethod);
+                return;
+            }
+        }
+        methods.add(resultMethod);
     }
 
     /*public TCClass filterMethodsByRunTime(LocalDateTime localDateTime) {

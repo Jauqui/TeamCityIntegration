@@ -101,6 +101,11 @@ public class TCNavigator {
         return LocalDateTime.parse(startDateTime, DateTimeFormatter.ofPattern(DATE_PATTERN));
     }
 
+    public LocalDateTime getBuildFinishDate() {
+        String startDateTime = document.getElementsByTagName("finishDate").item(0).getChildNodes().item(0).getNodeValue();
+        return LocalDateTime.parse(startDateTime, DateTimeFormatter.ofPattern(DATE_PATTERN));
+    }
+
     private String getNodeHRefByTagAndProperty(String tag, String propertyName, String propertyValue) {
         NodeList nodeList = document.getElementsByTagName(tag);
         for (int f=0; f<nodeList.getLength(); f++) {
@@ -117,7 +122,8 @@ public class TCNavigator {
 
     public TCResult getResultsForBuild() {
         LocalDateTime startDateTime = getBuildStartDate();
-        TCResult tcResult = new TCResult(startDateTime);
+        LocalDateTime finishDateTime = getBuildFinishDate();
+        TCResult tcResult = new TCResult();
 
         String a_href = getElementHRefByTag("artifacts", 0);
         String artifactsResponse = restInvoker.getDataFromServer(a_href);
@@ -146,14 +152,15 @@ public class TCNavigator {
         String htmlResponse = restInvoker.getDataFromServer(c_href);
         org.jsoup.nodes.Document htmlDoc = Jsoup.parse(htmlResponse);
 
-        addResultsFromType(htmlDoc, tcResult, "suite-Full_System_Test-class-failed", TCStatus.FAIL);
-        addResultsFromType(htmlDoc, tcResult, "suite-Full_System_Test-class-skipped", TCStatus.SKIP);
-        addResultsFromType(htmlDoc, tcResult, "suite-Full_System_Test-class-passed", TCStatus.PASS);
+        addResultsFromType(htmlDoc, tcResult, startDateTime, "suite-Full_System_Test-class-failed", TCStatus.FAIL);
+        addResultsFromType(htmlDoc, tcResult, startDateTime, "suite-Full_System_Test-class-skipped", TCStatus.SKIP);
+        addResultsFromType(htmlDoc, tcResult, startDateTime, "suite-Full_System_Test-class-passed", TCStatus.PASS);
 
         return tcResult;
     }
 
-    private void addResultsFromType(org.jsoup.nodes.Document htmlDoc, TCResult tcResult, String elementClass, TCStatus status) {
+    private void addResultsFromType(org.jsoup.nodes.Document htmlDoc, TCResult tcResult, LocalDateTime startDateTime,
+                                    String elementClass, TCStatus status) {
         Elements elementClasses = htmlDoc.getElementsByClass(elementClass);
         int classNumb = elementClasses.size();
         for (int element=0; element< classNumb; element++) {
@@ -173,7 +180,7 @@ public class TCNavigator {
                 String stackTrace = "";
                 if (stackTraceClass.size() > 0)
                     stackTrace = stackTraceClass.get(0).html();
-                tcResult.addTest(className, methodName, parameters, stackTrace, status);
+                tcResult.addTest(className, methodName, parameters, stackTrace, startDateTime, status);
             }
         }
     }

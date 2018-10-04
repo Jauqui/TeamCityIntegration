@@ -34,8 +34,8 @@ public class TCMethod {
         tests.add(tcTest);
     }
 
-    public void addTest(String parameters, String stackTrace, TCStatus status) {
-        TCTest tcTest = new TCTest(parameters, stackTrace, status);
+    public void addTest(String parameters, String stackTrace, LocalDateTime startDateTime, TCStatus status) {
+        TCTest tcTest = new TCTest(parameters, stackTrace, startDateTime, status);
         tests.add(tcTest);
     }
 
@@ -45,6 +45,14 @@ public class TCMethod {
 
     public void setTests(List<TCTest> tests) {
         this.tests = tests;
+    }
+
+    public HashSet<LocalDateTime> getTestTimes() {
+        HashSet<LocalDateTime> localDateTimes = new HashSet<>();
+        for (TCTest tcTest : tests)
+            localDateTimes.add(tcTest.getStartDateTime());
+
+        return localDateTimes;
     }
 
     /*public List<TCTestResult> filterTests(String parameters) {
@@ -69,5 +77,10 @@ public class TCMethod {
         }
 
         return tcMethod;
+    }
+
+    public void addTCMethod(TCMethod resultMethod) {
+        for (TCTest resultTest : resultMethod.getTests())
+            tests.add(resultTest);
     }
 }
