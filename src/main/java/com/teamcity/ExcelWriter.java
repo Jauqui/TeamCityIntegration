@@ -20,69 +20,65 @@ public class ExcelWriter {
     }
 
     public void addResultsToFile(TCResult result) {
-        for (LocalDateTime startDateTime : result.getRunTimes()) {
-            // Create a Sheet
-            Sheet sheet = workbook.createSheet(startDateTime.toString().replace(":", "-"));
+        LocalDateTime startDateTime = result.getStartDateTime();
+        // Create a Sheet
+        Sheet sheet = workbook.createSheet(startDateTime.toString().replace(":", "-"));
 
-            // Create a Font for styling header cells
-            Font headerFont = workbook.createFont();
-            headerFont.setBold(true);
-            headerFont.setFontHeightInPoints((short) 14);
-            headerFont.setColor(IndexedColors.BLACK1.getIndex());
+        // Create a Font for styling header cells
+        Font headerFont = workbook.createFont();
+        headerFont.setBold(true);
+        headerFont.setFontHeightInPoints((short) 14);
+        headerFont.setColor(IndexedColors.BLACK1.getIndex());
 
-            // Create a CellStyle with the font
-            CellStyle headerCellStyle = workbook.createCellStyle();
-            headerCellStyle.setFont(headerFont);
+        // Create a CellStyle with the font
+        CellStyle headerCellStyle = workbook.createCellStyle();
+        headerCellStyle.setFont(headerFont);
 
-            // Create a Row
-            Row headerRow = sheet.createRow(0);
+        // Create a Row
+        Row headerRow = sheet.createRow(0);
 
-            // Create cells
-            Cell cell = headerRow.createCell(0);
-            cell.setCellValue("Class");
-            cell.setCellStyle(headerCellStyle);
-            cell = headerRow.createCell(1);
-            cell.setCellValue("Method");
-            cell.setCellStyle(headerCellStyle);
-            cell = headerRow.createCell(2);
-            cell.setCellValue("Paremeters");
-            cell.setCellStyle(headerCellStyle);
-            cell = headerRow.createCell(3);
-            cell.setCellValue("Status");
-            cell.setCellStyle(headerCellStyle);
-            cell = headerRow.createCell(4);
-            cell.setCellValue("StackTrace");
-            cell.setCellStyle(headerCellStyle);
+        // Create cells
+        Cell cell = headerRow.createCell(0);
+        cell.setCellValue("Class");
+        cell.setCellStyle(headerCellStyle);
+        cell = headerRow.createCell(1);
+        cell.setCellValue("Method");
+        cell.setCellStyle(headerCellStyle);
+        cell = headerRow.createCell(2);
+        cell.setCellValue("Paremeters");
+        cell.setCellStyle(headerCellStyle);
+        cell = headerRow.createCell(3);
+        cell.setCellValue("Status");
+        cell.setCellStyle(headerCellStyle);
+        cell = headerRow.createCell(4);
+        cell.setCellValue("StackTrace");
+        cell.setCellStyle(headerCellStyle);
 
-            int classRow = 1, methodRow = 1, testRow = 1, testResultRow = 1;
-            for (TCClass tcClass : result.getClasses()) {
-                methodRow = classRow;
-                for (TCMethod tcMethod : tcClass.getMethods()) {
-                    testRow = methodRow;
-                    for (TCTest tcTest : tcMethod.getTests()) {
-                        if (tcTest.containsTime(startDateTime)) {
-                            TCTestResult tcTcTestResult = tcTest.getResultForTime(startDateTime);
-                            Row row = sheet.createRow(testRow);
-                            row.createCell(0).setCellValue(tcClass.getClassName());
-                            row.createCell(1).setCellValue(tcMethod.getMethodName());
-                            row.createCell(2).setCellValue(tcTest.getParameters());
-                            row.createCell(3).setCellValue(tcTcTestResult.getStatus().name());
-                            row.createCell(4).setCellValue(tcTcTestResult.getStackTrace());
-                            testRow++;
-                        }
-                    }
-                    if (testRow > methodRow + 1) {
-                        CellRangeAddress cellRangeAddress = new CellRangeAddress(methodRow, testRow - 1, 1, 1);
-                        sheet.addMergedRegion(cellRangeAddress);
-                    }
-                    methodRow = testRow;
+        int classRow = 1, methodRow = 1, testRow = 1, testResultRow = 1;
+        for (TCClass tcClass : result.getClasses()) {
+            methodRow = classRow;
+            for (TCMethod tcMethod : tcClass.getMethods()) {
+                testRow = methodRow;
+                for (TCTest tcTest : tcMethod.getTests()) {
+                    Row row = sheet.createRow(testRow);
+                    row.createCell(0).setCellValue(tcClass.getClassName());
+                    row.createCell(1).setCellValue(tcMethod.getMethodName());
+                    row.createCell(2).setCellValue(tcTest.getParameters());
+                    row.createCell(3).setCellValue(tcTest.getStatus().name());
+                    row.createCell(4).setCellValue(tcTest.getStackTrace());
+                    testRow++;
                 }
-                if (testRow > classRow + 1) {
-                    CellRangeAddress cellRangeAddress = new CellRangeAddress(classRow, testRow - 1, 0, 0);
+                if (testRow > methodRow + 1) {
+                    CellRangeAddress cellRangeAddress = new CellRangeAddress(methodRow, testRow - 1, 1, 1);
                     sheet.addMergedRegion(cellRangeAddress);
                 }
-                classRow = testRow;
+                methodRow = testRow;
             }
+            if (testRow > classRow + 1) {
+                CellRangeAddress cellRangeAddress = new CellRangeAddress(classRow, testRow - 1, 0, 0);
+                sheet.addMergedRegion(cellRangeAddress);
+            }
+            classRow = testRow;
         }
     }
 

@@ -10,18 +10,16 @@ import java.util.List;
 
 public class TCResult {
     private List<TCClass> classes;
-    private List<LocalDateTime> startDateTimes;
+    private final LocalDateTime startDateTime;
 
-    public TCResult() {
-        startDateTimes = new ArrayList<>();
+
+    public TCResult(LocalDateTime startDateTime) {
+        this.startDateTime = startDateTime;
         classes = new ArrayList<>();
     }
 
     public void addTest(String className, String methodName, String testParameters, String testStackTrace,
-                        String startTime, TCStatus status) {
-        LocalDateTime startDateTime = LocalDateTime.parse(startTime, DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmssZ"));
-        if (!startDateTimes.contains(startDateTime))
-            startDateTimes.add(startDateTime);
+                        TCStatus status) {
         for (TCClass tcClass: classes) {
             if (tcClass.getClassName().equals(className)) {
                 tcClass.addTest(methodName, testParameters, testStackTrace, startDateTime, status);
@@ -67,13 +65,7 @@ public class TCResult {
         return classes;
     }
 
-    public HashSet<LocalDateTime> getRunTimes() {
-        HashSet<LocalDateTime> tcRunDateTime = new HashSet<>();
-        for (TCClass tcClass : classes) {
-            HashSet<LocalDateTime> tcClassDateTimes = tcClass.getRunTimes();
-            tcRunDateTime.addAll(tcClassDateTimes);
-        }
-
-        return tcRunDateTime;
+    public LocalDateTime getStartDateTime() {
+        return startDateTime;
     }
 }

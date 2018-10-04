@@ -16,9 +16,12 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 
 public class TCNavigator {
+    public static final String DATE_PATTERN = "yyyyMMdd'T'HHmmssZ";
     private Document document;
     private final RESTInvoker restInvoker;
 
@@ -93,8 +96,9 @@ public class TCNavigator {
         return nodeMap.getNamedItem("href").getNodeValue();
     }
 
-    public String getBuildStartDate() {
-        return document.getElementsByTagName("startDate").item(0).getChildNodes().item(0).getNodeValue();
+    public LocalDateTime getBuildStartDate() {
+        String startDateTime = document.getElementsByTagName("startDate").item(0).getChildNodes().item(0).getNodeValue();
+        return LocalDateTime.parse(startDateTime, DateTimeFormatter.ofPattern(DATE_PATTERN));
     }
 
     private String getNodeHRefByTagAndProperty(String tag, String propertyName, String propertyValue) {
@@ -112,8 +116,8 @@ public class TCNavigator {
     }
 
     public TCResult getResultsForBuild() {
-        String startDateTime = getBuildStartDate();
-        TCResult tcResult = new TCResult();
+        LocalDateTime startDateTime = getBuildStartDate();
+        TCResult tcResult = new TCResult(startDateTime);
 
         String a_href = getElementHRefByTag("artifacts", 0);
         String artifactsResponse = restInvoker.getDataFromServer(a_href);
@@ -142,72 +146,42 @@ public class TCNavigator {
         String htmlResponse = restInvoker.getDataFromServer(c_href);
         org.jsoup.nodes.Document htmlDoc = Jsoup.parse(htmlResponse);
 
-        Elements failClasses = htmlDoc.getElementsByClass("suite-Full_System_Test-class-failed");
-        int failClassNumb = failClasses.size();
-        for (int fail=0; fail< failClassNumb; fail++) {
-            org.jsoup.nodes.Element failClass = failClasses.get(fail);
-            Elements failingTestsPerClass = failClass.getElementsByClass("method-content");
-            Elements failingClassName = failClass.getElementsByClass("class-name");
-            String className = failingClassName.get(0).html();
-            for (int fClass = 0; fClass<failingTestsPerClass.size(); fClass++) {
-                org.jsoup.nodes.Element failingTest = failingTestsPerClass.get(fClass);
-                Elements failingMethodNameClass = failingTest.getElementsByClass("method-name");
-                String methodName = failingMethodNameClass.get(0).html();
-                Elements failingParametersClass = failingTest.getElementsByClass("parameters");
-                String parameters = "";
-                if (failingParametersClass.size() > 0)
-                    parameters = failingParametersClass.get(0).html();
-                Elements failingStackTraceClass = failingTest.getElementsByClass("stack-trace");
-                String stackTrace = failingStackTraceClass.get(0).html();
-                tcResult.addTest(className, methodName, parameters, stackTrace, startDateTime, TCStatus.FAIL);
-            }
-        }
-        Elements skipClasses = htmlDoc.getElementsByClass("suite-Full_System_Test-class-skipped");
-        int skipClassNumb = skipClasses.size();
-        for (int skip=0; skip< skipClassNumb; skip++) {
-            org.jsoup.nodes.Element skipClass = skipClasses.get(skip);
-            Elements skipTestsPerClass = skipClass.getElementsByClass("method-content");
-            Elements skipClassName = skipClass.getElementsByClass("class-name");
-            String className = skipClassName.get(0).html();
-            for (int sClass = 0; sClass<skipTestsPerClass.size(); sClass++) {
-                org.jsoup.nodes.Element skipTest = skipTestsPerClass.get(sClass);
-                Elements skipMethodNameClass = skipTest.getElementsByClass("method-name");
-                String methodName = skipMethodNameClass.get(0).html();
-                Elements skipParametersClass = skipTest.getElementsByClass("parameters");
-                String parameters = "";
-                if (skipParametersClass.size() > 0)
-                    parameters = skipParametersClass.get(0).html();
-                Elements skipStackTraceClass = skipTest.getElementsByClass("stack-trace");
-                String stackTrace = "";
-                if (skipStackTraceClass.size() > 0) {
-                    stackTrace = skipStackTraceClass.get(0).html();
-                }
-                tcResult.addTest(className, methodName, parameters, stackTrace, startDateTime, TCStatus.SKIP);
-            }
-        }
-        Elements passClasses = htmlDoc.getElementsByClass("suite-Full_System_Test-class-passed");
-        int passClassNumb = passClasses.size();
-        for (int pass=0; pass< passClassNumb; pass++) {
-            org.jsoup.nodes.Element passClass = passClasses.get(pass);
-            Elements passTestsPerClass = passClass.getElementsByClass("method-content");
-            Elements passClassName = passClass.getElementsByClass("class-name");String className = passClassName.get(0).html();
-            for (int pClass = 0; pClass<passTestsPerClass.size(); pClass++) {
-                org.jsoup.nodes.Element passTest = passTestsPerClass.get(pClass);
-                Elements passMethodNameClass = passTest.getElementsByClass("method-name");
-                String methodName = passMethodNameClass.get(0).html();
-                Elements passParametersClass = passTest.getElementsByClass("parameters");
-                String parameters = "";
-                if (passParametersClass.size() > 0)
-                    parameters = passParametersClass.get(0).html();
-                Elements passStackTraceClass = passTest.getElementsByClass("stack-trace");
-                String stackTrace = "";
-                if (passStackTraceClass.size() > 0) {
-                    stackTrace = passStackTraceClass.get(0).html();
-                }
-                tcResult.addTest(className, methodName, parameters, stackTrace, startDateTime, TCStatus.PASS);
-            }
-        }
+        addResultsFromType(htmlDoc, tcResult, "suite-Full_System_Test-class-failed", TCStatus.FAIL);
+        addResultsFromType(htmlDoc, tcResult, "suite-Full_System_Test-class-skipped", TCStatus.SKIP);
+        addResultsFromType(htmlDoc, tcResult, "suite-Full_System_Test-class-passed", TCStatus.PASS);
 
         return tcResult;
+    }
+
+    private void addResultsFromType(org.jsoup.nodes.Document htmlDoc, TCResult tcResult, String elementClass, TCStatus status) {
+        Elements elementClasses = htmlDoc.getElementsByClass(elementClass);
+        int classNumb = elementClasses.size();
+        for (int element=0; element< classNumb; element++) {
+            org.jsoup.nodes.Element nodeClass = elementClasses.get(element);
+            Elements testsPerClass = nodeClass.getElementsByClass("method-content");
+            Elements nodeClassName = nodeClass.getElementsByClass("class-name");
+            String className = nodeClassName.get(0).html();
+            for (int eClass = 0; eClass<testsPerClass.size(); eClass++) {
+                org.jsoup.nodes.Element elementTest = testsPerClass.get(eClass);
+                Elements methodNameClass = elementTest.getElementsByClass("method-name");
+                String methodName = methodNameClass.get(0).html();
+                Elements parametersClass = elementTest.getElementsByClass("parameters");
+                String parameters = "";
+                if (parametersClass.size() > 0)
+                    parameters = parametersClass.get(0).html();
+                Elements stackTraceClass = elementTest.getElementsByClass("stack-trace");
+                String stackTrace = "";
+                if (stackTraceClass.size() > 0)
+                    stackTrace = stackTraceClass.get(0).html();
+                tcResult.addTest(className, methodName, parameters, stackTrace, status);
+            }
+        }
+    }
+
+    public TCResult getResultsForBuildWithId(String path, String id, int build) {
+        openBuildsForProjectById(path, id);
+        openBuildByIndex(build);
+
+        return getResultsForBuild();
     }
 }

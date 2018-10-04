@@ -1,5 +1,4 @@
 package com.teamcity;
-import org.apache.commons.codec.binary.Base64;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -10,20 +9,19 @@ import java.net.URLConnection;
 
 public class RESTInvoker {
     private final String baseUrl;
-    private final String username;
-    private final String password;
+    private final String authToken;
 
-    public RESTInvoker(String baseUrl, String username, String password) {
+
+    public RESTInvoker(String baseUrl, String authToken) {
         this.baseUrl = baseUrl;
-        this.username = username;
-        this.password = password;
+        this.authToken = authToken;
     }
 
     public String getDataFromServer(String path) {
         StringBuilder sb = new StringBuilder();
         try {
             URL url = new URL(baseUrl + path);
-            URLConnection urlConnection = setUsernamePassword(url);
+            URLConnection urlConnection = getURLConnection(url, authToken);
             BufferedReader reader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
             String line;
             while ((line = reader.readLine()) != null) {
@@ -37,11 +35,9 @@ public class RESTInvoker {
         }
     }
 
-    private URLConnection setUsernamePassword(URL url) throws IOException {
+    private URLConnection getURLConnection(URL url, String authToken) throws IOException {
         URLConnection urlConnection = url.openConnection();
-        String authString = username + ":" + password;
-        String authStringEnc = new String(Base64.encodeBase64(authString.getBytes()));
-        urlConnection.setRequestProperty("Authorization", "Basic " + authStringEnc);
+        urlConnection.setRequestProperty("Authorization", authToken);
 
         return urlConnection;
     }

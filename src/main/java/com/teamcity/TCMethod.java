@@ -34,16 +34,8 @@ public class TCMethod {
         tests.add(tcTest);
     }
 
-    public void addTest(String testParameters, String testStackTrace, LocalDateTime startTime, TCStatus status) {
-        for (TCTest tcTest : tests) {
-            if (tcTest.getParameters().equals(testParameters)) {
-                tcTest.addTestResult(testStackTrace, startTime, status);
-                return;
-            }
-        }
-
-        TCTest tcTest = new TCTest(testParameters);
-        tcTest.addTestResult(testStackTrace, startTime, status);
+    public void addTest(String parameters, String stackTrace, TCStatus status) {
+        TCTest tcTest = new TCTest(parameters, stackTrace, status);
         tests.add(tcTest);
     }
 
@@ -66,16 +58,6 @@ public class TCMethod {
         tcMethod.setTests(tests.stream().filter(predicate).collect(Collectors.toList()));
         return tcMethod;
     }*/
-
-    public HashSet<LocalDateTime> getRunTimes() {
-        HashSet<LocalDateTime> dateTimes = new HashSet<>();
-        for (TCTest tcTest : tests) {
-            HashSet<LocalDateTime> tcTestStartDateTime = tcTest.getRunTimes();
-            dateTimes.addAll(tcTestStartDateTime);
-        }
-
-        return dateTimes;
-    }
 
     public TCMethod filterTests(String parameters) {
         TCMethod tcMethod = new TCMethod(methodName);
