@@ -1,6 +1,7 @@
 package com.teamcity.excel;
 
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.FileNotFoundException;
@@ -15,13 +16,16 @@ public abstract class ExcelResultWriter {
 
     public ExcelResultWriter() {
         headerFont = workbook.createFont();
-        headerFont.setBold(true);
-        headerFont.setFontHeightInPoints((short) 14);
-        headerFont.setColor(IndexedColors.BLACK1.getIndex());
+        //headerFont.setBold(true);
+        headerFont.setFontHeightInPoints((short) 10);
+        //headerFont.setColor(IndexedColors.BLACK1.getIndex());
 
         // Create a CellStyle with the font
         headerCellStyle = workbook.createCellStyle();
         headerCellStyle.setFont(headerFont);
+        XSSFColor myColor = new XSSFColor(java.awt.Color.BLUE);
+        headerCellStyle.setFillBackgroundColor((short) 0x222222);
+        headerCellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
     }
 
     protected void writeToFile(String filename) {

@@ -120,10 +120,10 @@ public class TCNavigator {
         return null;
     }
 
-    public TCResult getResultsForBuild() {
+    public TCResults getResultsForBuild() {
         LocalDateTime startDateTime = getBuildStartDate();
         LocalDateTime finishDateTime = getBuildFinishDate();
-        TCResult tcResult = new TCResult();
+        TCResults tcResults = new TCResults();
 
         String a_href = getElementHRefByTag("artifacts", 0);
         String artifactsResponse = restInvoker.getDataFromServer(a_href);
@@ -132,7 +132,7 @@ public class TCNavigator {
         //here
         String c_href = getElementHRefByTag("children", 0);
         if (c_href == null)
-            return tcResult;
+            return tcResults;
         String contentResponse = restInvoker.getDataFromServer(c_href);
         parseXMLString(contentResponse);
 
@@ -152,14 +152,15 @@ public class TCNavigator {
         String htmlResponse = restInvoker.getDataFromServer(c_href);
         org.jsoup.nodes.Document htmlDoc = Jsoup.parse(htmlResponse);
 
-        addResultsFromType(htmlDoc, tcResult, startDateTime, "suite-Full_System_Test-class-failed", TCStatus.FAIL);
-        addResultsFromType(htmlDoc, tcResult, startDateTime, "suite-Full_System_Test-class-skipped", TCStatus.SKIP);
-        addResultsFromType(htmlDoc, tcResult, startDateTime, "suite-Full_System_Test-class-passed", TCStatus.PASS);
+        //add results for this build
+        addResultsFromType(htmlDoc, tcResults, startDateTime, "suite-Full_System_Test-class-failed", TCStatus.FAIL);
+        addResultsFromType(htmlDoc, tcResults, startDateTime, "suite-Full_System_Test-class-skipped", TCStatus.SKIP);
+        addResultsFromType(htmlDoc, tcResults, startDateTime, "suite-Full_System_Test-class-passed", TCStatus.PASS);
 
-        return tcResult;
+        return tcResults;
     }
 
-    private void addResultsFromType(org.jsoup.nodes.Document htmlDoc, TCResult tcResult, LocalDateTime startDateTime,
+    private void addResultsFromType(org.jsoup.nodes.Document htmlDoc, TCResults tcResults, LocalDateTime startDateTime,
                                     String elementClass, TCStatus status) {
         Elements elementClasses = htmlDoc.getElementsByClass(elementClass);
         int classNumb = elementClasses.size();
@@ -180,12 +181,12 @@ public class TCNavigator {
                 String stackTrace = "";
                 if (stackTraceClass.size() > 0)
                     stackTrace = stackTraceClass.get(0).html();
-                tcResult.addTest(className, methodName, parameters, stackTrace, startDateTime, status);
+                tcResults.addTest(className, methodName, parameters, stackTrace, startDateTime, status);
             }
         }
     }
 
-    public TCResult getResultsForBuildWithId(String path, String id, int build) {
+    public TCResults getResultsForBuildWithId(String path, String id, int build) {
         openBuildsForProjectById(path, id);
         openBuildByIndex(build);
 

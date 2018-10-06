@@ -4,7 +4,6 @@ import com.teamcity.enums.TCStatus;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 public class TCClass {
@@ -77,11 +76,15 @@ public class TCClass {
     private void addTCMethod(TCMethod resultMethod) {
         for (TCMethod tcMethod : methods) {
             if (tcMethod.equals(resultMethod)) {
-                tcMethod.addTCMethod(resultMethod);
+                tcMethod.addTCTests(resultMethod);
                 return;
             }
         }
         methods.add(resultMethod);
+    }
+
+    public int getTestRunsSize(LocalDateTime startDateTime, TCStatus tcStatus) {
+        return methods.stream().mapToInt(tcMethod -> tcMethod.getTestRunsSize(startDateTime, tcStatus)).sum();
     }
 
     /*public TCClass filterMethodsByRunTime(LocalDateTime localDateTime) {

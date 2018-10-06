@@ -1,6 +1,9 @@
 package com.teamcity;
 
-public class TeamCityAPI {
-    public static final String authToken = System.getenv().get("TeamCity_AuthToken");
+public abstract class TeamCityAPI {
     public static final String baseUrl = "https://teamcity.sapphirepri.com/";
+
+    protected static String getAuthToken() {
+        return System.getenv().get("TeamCity_AuthToken");
+    }
 }

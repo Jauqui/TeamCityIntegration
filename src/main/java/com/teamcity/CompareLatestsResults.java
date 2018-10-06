@@ -6,16 +6,16 @@ import java.time.LocalDateTime;
 
 public class CompareLatestsResults extends TeamCityAPI {
     public static void main(String[] args) {
-        RESTInvoker restInvoker = new RESTInvoker(baseUrl, authToken);
+        RESTInvoker restInvoker = new RESTInvoker(baseUrl, getAuthToken());
 
         String path = "httpAuth/app/rest/projects/ContinuousDeliveryPipeline_Nti_StandaloneSystemTests";
         String id = "ContinuousDeliveryPipeline_Nti_StandaloneSystemTests_SystemTestsStandalone";
 
-        TCResult finalResult = new TCResult();
+        TCResults finalResult = new TCResults();
         ComparativeResultExcelWriter excelWriter = new ComparativeResultExcelWriter();
         for (int b = 0; b<5; b++) {
             TCNavigator navigator = new TCNavigator(restInvoker);
-            TCResult result = navigator.getResultsForBuildWithId(path, id, b);
+            TCResults result = navigator.getResultsForBuildWithId(path, id, b);
 
             for (LocalDateTime startDateTime : result.getTestStartDateTimes()) {
                 System.out.println(result.size() + " -> " + startDateTime.toString());

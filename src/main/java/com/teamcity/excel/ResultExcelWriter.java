@@ -1,9 +1,6 @@
 package com.teamcity.excel;
 
-import com.teamcity.TCClass;
-import com.teamcity.TCMethod;
-import com.teamcity.TCResult;
-import com.teamcity.TCTest;
+import com.teamcity.*;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 
@@ -11,7 +8,7 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 
 public class ResultExcelWriter extends ExcelResultWriter {
-    public void writeResultFile(TCResult result, String filename) {
+    public void writeResultFile(TCResults result, String filename) {
         HashSet<LocalDateTime> startDateTimes = result.getTestStartDateTimes();
 
         for (LocalDateTime startDateTime : startDateTimes) {
@@ -58,8 +55,9 @@ public class ResultExcelWriter extends ExcelResultWriter {
                         row.createCell(0).setCellValue(tcClass.getClassName());
                         row.createCell(1).setCellValue(tcMethod.getMethodName());
                         row.createCell(2).setCellValue(tcTest.getParameters());
-                        row.createCell(3).setCellValue(tcTest.getStatus().name());
-                        row.createCell(4).setCellValue(tcTest.getStackTrace());
+                        TCTestRun tcTestRun = tcTest.getTestRun(startDateTime);
+                        row.createCell(3).setCellValue(tcTestRun.getStatus().name());
+                        row.createCell(4).setCellValue(tcTestRun.getStackTrace());
                         testRow++;
                     }
                     if (testRow > methodRow + 1) {

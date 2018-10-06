@@ -35,24 +35,15 @@ public class TCMethod {
     }
 
     public void addTest(String parameters, String stackTrace, LocalDateTime startDateTime, TCStatus status) {
-        TCTest tcTest = new TCTest(parameters, stackTrace, startDateTime, status);
+        for (TCTest tcTest : tests) {
+            if (tcTest.getParameters().equals(parameters)) {
+                tcTest.addTestRun(startDateTime, status, stackTrace);
+                return;
+            }
+        }
+        TCTest tcTest = new TCTest(parameters);
+        tcTest.addTestRun(startDateTime, status, stackTrace);
         tests.add(tcTest);
-    }
-
-    public boolean equals(TCMethod tcMethod) {
-        return this.methodName.equals(tcMethod.getMethodName());
-    }
-
-    public void setTests(List<TCTest> tests) {
-        this.tests = tests;
-    }
-
-    public HashSet<LocalDateTime> getTestTimes() {
-        HashSet<LocalDateTime> localDateTimes = new HashSet<>();
-        for (TCTest tcTest : tests)
-            localDateTimes.add(tcTest.getStartDateTime());
-
-        return localDateTimes;
     }
 
     /*public List<TCTestResult> filterTests(String parameters) {
@@ -67,6 +58,10 @@ public class TCMethod {
         return tcMethod;
     }*/
 
+    public boolean equals(TCMethod tcMethod) {
+        return this.methodName.equals(tcMethod.getMethodName());
+    }
+
     public TCMethod filterTests(String parameters) {
         TCMethod tcMethod = new TCMethod(methodName);
         for (TCTest tcTest : tests) {
@@ -79,8 +74,22 @@ public class TCMethod {
         return tcMethod;
     }
 
-    public void addTCMethod(TCMethod resultMethod) {
+    public void addTCTests(TCMethod resultMethod) {
         for (TCTest resultTest : resultMethod.getTests())
-            tests.add(resultTest);
+            addTCTest(resultTest);
+    }
+
+    public void addTCTest(TCTest resultTest) {
+        for (TCTest tcTest : tests) {
+            if (tcTest.getParameters().equals(resultTest.getParameters())) {
+                tcTest.addTCTest(resultTest);
+                return;
+            }
+        }
+        tests.add(resultTest);
+    }
+
+    public int getTestRunsSize(LocalDateTime startDateTime, TCStatus tcStatus) {
+        return tests.stream().mapToInt(tcTest -> tcTest.getTestRunsSize(startDateTime, tcStatus)).sum();
     }
 }

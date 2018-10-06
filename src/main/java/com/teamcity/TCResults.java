@@ -8,12 +8,12 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
-public class TCResult {
+public class TCResults {
     private List<TCClass> classes;
     HashSet<LocalDateTime> startDateTimes = new HashSet<>();
 
 
-    public TCResult() {
+    public TCResults() {
         classes = new ArrayList<>();
     }
 
@@ -41,26 +41,13 @@ public class TCResult {
         return size;
     }
 
-    public TCMethod getTestMethod(String className, String methodName, String parameters) {
-        for (TCClass tcClass : classes) {
-            if (tcClass.getClassName().equals(className))
-                return tcClass.getTestMethod(methodName, parameters);
-        }
-
-        return null;
-    }
-
     public int getClassesSize() {
         return classes.size();
     }
 
-    /*public List<TCTestResult> getTests() {
-        List<TCTestResult> tests = new ArrayList<>();
-        for (TCClass tcClass : classes) {
-            tests.addAll(tcClass.getTests());
-        }
-        return tests;
-    }*/
+    public int getTestRunsSize(LocalDateTime startDateTime, TCStatus tcStatus) {
+        return classes.stream().mapToInt(tcClass -> tcClass.getTestRunsSize(startDateTime, tcStatus)).sum();
+    }
 
     public List<TCClass> getClasses() {
         return classes;
@@ -102,7 +89,7 @@ public class TCResult {
         return firstDateTime;
     }
 
-    public void addTCResult(TCResult result) {
+    public void addTCResult(TCResults result) {
         startDateTimes.addAll(result.getTestStartDateTimes());
         for (TCClass resultClass : result.getClasses())
             addTCClass(resultClass);
