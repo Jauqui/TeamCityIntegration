@@ -14,7 +14,7 @@ public class CompareLatestsResults extends TeamCityAPI {
         TCResults finalResult = new TCResults();
         finalResult.setMergeTests(false);
         ComparativeResultExcelWriter excelWriter = new ComparativeResultExcelWriter();
-        for (int b = 0; b<3; b++) {
+        for (int b = 0; b<11; b++) {
             TCNavigator navigator = new TCNavigator(restInvoker);
             TCResults result = navigator.getResultsForBuildWithId(path, id, b);
 

@@ -60,7 +60,7 @@ public class TCMethod {
         return tcMethod;
     }
 
-    private TCTest getSkipTests() {
+    private TCTest getSkipTest() {
         for (TCTest tcTest : tests) {
             if (tcTest.getParameters().equals("")) {
                 for (LocalDateTime time : tcTest.getRunTimes()) {
@@ -96,7 +96,7 @@ public class TCMethod {
         int testsSize = getTestsSize();
         int runsSize = getTestRunsSize();
         if (runsSize != timesSize * testsSize) {
-            TCTest skipTest = getSkipTests();
+            TCTest skipTest = getSkipTest();
             if (skipTest != null) {
                 List<TCTest> mergeTests = findTestsWithoutTime(tests, skipTest.getRunTimes());
                 if (!mergeTests.isEmpty()) {//There is some skip test in a method with tests with parameters
@@ -160,12 +160,23 @@ public class TCMethod {
 
     private List<TCTest> findTestsWithoutTime(List<TCTest> tests, Set<LocalDateTime> runTimes) {
         List<TCTest> tcTests = new ArrayList<>();
+        LocalDateTime runTime = findRunTime(tests, runTimes);
         for (TCTest test : tests) {
-            if (testMissingTimes(test, runTimes))
-                tcTests.add(test);
+            if (test.getRunTimes().contains(runTime))
+                    tcTests.add(test);
         }
 
         return tcTests;
+    }
+
+    private LocalDateTime findRunTime(List<TCTest> tests, Set<LocalDateTime> skipRunTimes) {
+        for (TCTest test : tests) {
+            for (LocalDateTime skipRunTime : skipRunTimes)
+                if (!test.getRunTimes().contains(skipRunTime))
+                    return test.getRunTimes().iterator().next();
+        }
+
+        return null;
     }
 
     private boolean testMissingTimes(TCTest tcTest, Set<LocalDateTime> runTimes) {

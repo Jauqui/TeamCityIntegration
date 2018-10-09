@@ -137,7 +137,7 @@ public class TCResults {
         return testRunsSize;
     }
 
-    public void setMergeTests(boolean mergeTests) {
-        this.mergeTests = mergeTests;
+    public void setMergeTests(boolean mergeSkipTests) {
+        this.mergeTests = mergeSkipTests;
     }
 }
