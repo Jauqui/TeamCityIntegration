@@ -11,6 +11,7 @@ import java.util.List;
 public class TCResults {
     private List<TCClass> classes;
     HashSet<LocalDateTime> startDateTimes = new HashSet<>();
+    boolean mergeTests = false;
 
 
     public TCResults() {
@@ -93,6 +94,9 @@ public class TCResults {
         startDateTimes.addAll(result.getTestStartDateTimes());
         for (TCClass resultClass : result.getClasses())
             addTCClass(resultClass);
+
+        if (mergeTests && startDateTimes.size() > 1)//Could there be something to merge
+            mergeTests();
     }
 
     private void addTCClass(TCClass resultClass) {
@@ -103,5 +107,37 @@ public class TCResults {
             }
         }
         classes.add(resultClass);
+    }
+
+    public void mergeTests() {
+        int timesSize = startDateTimes.size();
+        int testsSize = getTestsSize();
+        int runsSize = getTestRunsSize();
+
+        if (runsSize != timesSize * testsSize) {
+            for (TCClass tcClass : classes) {
+                tcClass.mergeTests(startDateTimes);
+            }
+        }
+    }
+
+    private int getTestsSize() {
+        int testsSize = 0;
+        for (TCClass tcClass : classes)
+            testsSize += tcClass.getTestsSize();
+
+        return testsSize;
+    }
+
+    private int getTestRunsSize() {
+        int testRunsSize = 0;
+        for (TCClass tcClass : classes)
+            testRunsSize += tcClass.getTestRunsSize();
+
+        return testRunsSize;
+    }
+
+    public void setMergeTests(boolean mergeTests) {
+        this.mergeTests = mergeTests;
     }
 }

@@ -3,9 +3,7 @@ package com.teamcity;
 import com.teamcity.enums.TCStatus;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class TCTest {
     private final String parameters;
@@ -60,6 +58,21 @@ public class TCTest {
     }
 
     public int getRunsCount() {
+        return runs.size();
+    }
+
+    public List<TCTestRun> getRuns(TCStatus status) {
+        List<TCTestRun> tcTestRuns = new ArrayList<>();
+        for (LocalDateTime time : runs.keySet())  {
+            TCTestRun run = runs.get(time);
+            if (run.getStatus() == status)
+                tcTestRuns.add(run);
+        }
+
+        return tcTestRuns;
+    }
+
+    public int getTestRunsSize() {
         return runs.size();
     }
 }

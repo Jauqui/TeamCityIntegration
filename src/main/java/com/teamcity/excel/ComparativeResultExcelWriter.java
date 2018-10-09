@@ -4,6 +4,7 @@ import com.teamcity.*;
 import com.teamcity.enums.TCMetric;
 import com.teamcity.enums.TCStatus;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellRangeAddress;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -11,7 +12,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
-public class ComparativeResultExcelWriter extends ExcelResultWriter {
+public class ComparativeResultExcelWriter extends ExcelBaseWriter {
     private HashMap<String, Integer> headerRows = new HashMap<>();
 
     private List<TCMetric> metrics = Arrays.asList(TCMetric.Total_Runs, TCMetric.Pass_Percentage);
@@ -94,13 +95,25 @@ public class ComparativeResultExcelWriter extends ExcelResultWriter {
         Row rowPass = sheet.createRow(sheet.getLastRowNum() + 1);
         Row rowSkip = sheet.createRow(sheet.getLastRowNum() + 1);
         Row rowFail = sheet.createRow(sheet.getLastRowNum() + 1);
+
+        CellRangeAddress cellRangeAddress = new CellRangeAddress(rowPass.getRowNum(), rowPass.getRowNum(), 0, 2);
+        sheet.addMergedRegion(cellRangeAddress);
+        cellRangeAddress = new CellRangeAddress(rowSkip.getRowNum(), rowSkip.getRowNum(), 0, 2);
+        sheet.addMergedRegion(cellRangeAddress);
+        cellRangeAddress = new CellRangeAddress(rowFail.getRowNum(), rowFail.getRowNum(), 0, 2);
+        sheet.addMergedRegion(cellRangeAddress);
         for (LocalDateTime startDateTime : startDateTimes) {
             int runPass = results.getTestRunsSize(startDateTime, TCStatus.PASS);
             int runSkip = results.getTestRunsSize(startDateTime, TCStatus.SKIP);
             int runFail = results.getTestRunsSize(startDateTime, TCStatus.FAIL);
 
+            rowPass.createCell(0).setCellValue(TCStatus.PASS.name());
             rowPass.createCell(headerRows.get(startDateTime.toString())).setCellValue(runPass);
+
+            rowSkip.createCell(0).setCellValue(TCStatus.SKIP.name());
             rowSkip.createCell(headerRows.get(startDateTime.toString())).setCellValue(runSkip);
+
+            rowFail.createCell(0).setCellValue(TCStatus.FAIL.name());
             rowFail.createCell(headerRows.get(startDateTime.toString())).setCellValue(runFail);
         }
 

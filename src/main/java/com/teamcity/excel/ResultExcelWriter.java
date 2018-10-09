@@ -7,7 +7,7 @@ import org.apache.poi.ss.util.CellRangeAddress;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 
-public class ResultExcelWriter extends ExcelResultWriter {
+public class ResultExcelWriter extends ExcelBaseWriter {
     public void writeResultFile(TCResults result, String filename) {
         HashSet<LocalDateTime> startDateTimes = result.getTestStartDateTimes();
 

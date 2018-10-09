@@ -19,9 +19,11 @@ public class GetLatestsResults extends TeamCityAPI {
                 String fileName = "results/" + startDateTime.toString().replace(":", "-") + ".xlsx";
                 File file = new File(fileName);
                 if (!file.exists()) {
+                    System.out.println(b + " Adding result " + startDateTime.toString());
                     ResultExcelWriter excelResultWriter = new ResultExcelWriter();
                     excelResultWriter.writeResultFile(result, fileName);
-                }
+                } else
+                    System.out.println(b + " Result already exist " + startDateTime.toString());
             }
         }
     }

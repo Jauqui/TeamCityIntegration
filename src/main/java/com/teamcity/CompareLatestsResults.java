@@ -12,8 +12,9 @@ public class CompareLatestsResults extends TeamCityAPI {
         String id = "ContinuousDeliveryPipeline_Nti_StandaloneSystemTests_SystemTestsStandalone";
 
         TCResults finalResult = new TCResults();
+        finalResult.setMergeTests(false);
         ComparativeResultExcelWriter excelWriter = new ComparativeResultExcelWriter();
-        for (int b = 0; b<5; b++) {
+        for (int b = 0; b<3; b++) {
             TCNavigator navigator = new TCNavigator(restInvoker);
             TCResults result = navigator.getResultsForBuildWithId(path, id, b);
 
@@ -26,8 +27,8 @@ public class CompareLatestsResults extends TeamCityAPI {
 
         LocalDateTime firstDateTime = finalResult.getFirstDateTime();
         LocalDateTime lastDateTime = finalResult.getLastDateTime();
-        String fileName = "results/" + firstDateTime.toString().replace(":", "-") +
-                "_To_" + lastDateTime.toString().replace(":", "-") + ".xlsx";
+        String fileName = "mergeResults/" + firstDateTime.toString().replace(":", "-") +
+                "_To_" + lastDateTime.toString().replace(":", "-");
         excelWriter.writeToFile(finalResult, fileName);
     }
 }

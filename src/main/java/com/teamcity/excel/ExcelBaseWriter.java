@@ -8,13 +8,13 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-public abstract class ExcelResultWriter {
+public abstract class ExcelBaseWriter {
     protected final Workbook workbook = new XSSFWorkbook();
     protected final Font headerFont;
     protected final CellStyle headerCellStyle;
 
 
-    public ExcelResultWriter() {
+    public ExcelBaseWriter() {
         headerFont = workbook.createFont();
         //headerFont.setBold(true);
         headerFont.setFontHeightInPoints((short) 10);
