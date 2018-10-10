@@ -12,7 +12,7 @@ public class CompareLatestsResults extends TeamCityAPI {
         String id = "ContinuousDeliveryPipeline_Nti_StandaloneSystemTests_SystemTestsStandalone";
 
         TCResults finalResult = new TCResults();
-        finalResult.setMergeTests(false);
+        finalResult.setMergeTests(true);
         ComparativeResultExcelWriter excelWriter = new ComparativeResultExcelWriter();
         for (int b = 0; b<11; b++) {
             TCNavigator navigator = new TCNavigator(restInvoker);

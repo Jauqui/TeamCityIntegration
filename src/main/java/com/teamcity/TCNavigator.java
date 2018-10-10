@@ -169,6 +169,7 @@ public class TCNavigator {
             Elements testsPerClass = nodeClass.getElementsByClass("method-content");
             Elements nodeClassName = nodeClass.getElementsByClass("class-name");
             String className = nodeClassName.get(0).html();
+            className = className.substring(className.lastIndexOf(".")+1);
             for (int eClass = 0; eClass<testsPerClass.size(); eClass++) {
                 org.jsoup.nodes.Element elementTest = testsPerClass.get(eClass);
                 Elements methodNameClass = elementTest.getElementsByClass("method-name");
