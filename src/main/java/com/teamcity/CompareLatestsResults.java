@@ -1,5 +1,6 @@
 package com.teamcity;
 
+import com.teamcity.enums.TCParam;
 import com.teamcity.excel.ComparativeResultExcelWriter;
 
 import java.time.LocalDateTime;
@@ -8,15 +9,15 @@ public class CompareLatestsResults extends TeamCityAPI {
     public static void main(String[] args) {
         RESTInvoker restInvoker = new RESTInvoker(baseUrl, getAuthToken());
 
-        String path = "httpAuth/app/rest/projects/ContinuousDeliveryPipeline_Nti_StandaloneSystemTests";
-        String id = "ContinuousDeliveryPipeline_Nti_StandaloneSystemTests_SystemTestsStandalone";
+        String path = "ContinuousDeliveryPipeline_Nti_StandaloneSystemTests";
+        String name = "System Tests **standalone**";
 
         TCResults finalResult = new TCResults();
         finalResult.setMergeTests(true);
         ComparativeResultExcelWriter excelWriter = new ComparativeResultExcelWriter();
-        for (int b = 0; b<11; b++) {
+        for (int b = 0; b<2; b++) {
             TCNavigator navigator = new TCNavigator(restInvoker);
-            TCResults result = navigator.getResultsForBuildWithId(path, id, b);
+            TCResults result = navigator.getResultsForBuild(path, TCParam.NAME, name, b);
 
             for (LocalDateTime startDateTime : result.getTestStartDateTimes()) {
                 System.out.println(result.size() + " -> " + startDateTime.toString());

@@ -1,5 +1,6 @@
 package com.teamcity;
 
+import com.teamcity.enums.TCParam;
 import com.teamcity.enums.TCStatus;
 import org.jsoup.Jsoup;
 import org.jsoup.select.Elements;
@@ -19,14 +20,14 @@ import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import static com.teamcity.enums.TCParam.*;
+
 
 public class TCNavigator {
     public static final String DATE_PATTERN = "yyyyMMdd'T'HHmmssZ";
     private Document document;
     private final RESTInvoker restInvoker;
 
-    private static final String ID = "id";
-    private static final String HREF = "href";
     private static final String buildType = "buildType";
 
 
@@ -52,18 +53,18 @@ public class TCNavigator {
         }
     }
 
-    public TCNavigator openBuildsForProjectById(String path, String id) {
-        String projectResponse = restInvoker.getDataFromServer(path);
+    public TCNavigator openBuildsForProject(String projectName, TCParam param, String paramValue) {
+        String projectResponse = restInvoker.getDataFromServer("app/rest/projects/" + projectName);
         parseXMLString(projectResponse);
 
         NodeList nodeList = document.getElementsByTagName(buildType);
         for (int bt = 0; bt < nodeList.getLength(); bt++) {
             Node buildTypeNode = nodeList.item(bt);
             NamedNodeMap nodeMap = buildTypeNode.getAttributes();
-            String bt_id = nodeMap.getNamedItem(ID).getNodeValue();
-            String bt_href = nodeMap.getNamedItem(HREF).getNodeValue();
+            String bt_param = nodeMap.getNamedItem(param.getParameter()).getNodeValue();
+            String bt_href = nodeMap.getNamedItem(HREF.getParameter()).getNodeValue();
 
-            if (bt_id.equals(id)) {
+            if (bt_param.equals(paramValue)) {
                 String buildResponse = restInvoker.getDataFromServer(bt_href);
                 parseXMLString(buildResponse);
                 return this;
@@ -169,7 +170,7 @@ public class TCNavigator {
             Elements testsPerClass = nodeClass.getElementsByClass("method-content");
             Elements nodeClassName = nodeClass.getElementsByClass("class-name");
             String className = nodeClassName.get(0).html();
-            className = className.substring(className.lastIndexOf(".")+1);
+            className = className.replace("com.philips.sapphire.systemintegrationtests.", "...");
             for (int eClass = 0; eClass<testsPerClass.size(); eClass++) {
                 org.jsoup.nodes.Element elementTest = testsPerClass.get(eClass);
                 Elements methodNameClass = elementTest.getElementsByClass("method-name");
@@ -187,8 +188,8 @@ public class TCNavigator {
         }
     }
 
-    public TCResults getResultsForBuildWithId(String path, String id, int build) {
-        openBuildsForProjectById(path, id);
+    public TCResults getResultsForBuild(String project, TCParam param, String paramValue, int build) {
+        openBuildsForProject(project, param, paramValue);
         openBuildByIndex(build);
 
         return getResultsForBuild();

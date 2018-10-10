@@ -96,65 +96,55 @@ public class TCMethod {
         int testsSize = getTestsSize();
         int runsSize = getTestRunsSize();
         if (runsSize != timesSize * testsSize) {
-            TCTest skipTest = getSkipTest();
-            if (skipTest != null) {
-                List<TCTest> mergeTests = findTestsWithoutTime(tests, skipTest.getRunTimes());
-                if (!mergeTests.isEmpty()) {//There is some skip test in a method with tests with parameters
-                    for (LocalDateTime skipTime : skipTest.getRunTimes()) {
-                        TCTestRun skipRun = skipTest.getTestRun(skipTime);
+            mergeSkipTests(tests);
 
-                        for (TCTest mergeTest : mergeTests) {
-                            mergeTest.addTestRun(skipTime, TCStatus.SKIP, skipRun.getStackTrace());
+            runsSize = getTestRunsSize();
+            testsSize = getTestsSize();
+            if (runsSize != timesSize * testsSize)
+                mergePassTets(tests, times);
+        }
+    }
+
+    private void mergePassTets(List<TCTest> tests, HashSet<LocalDateTime> times) {
+        LocalDateTime mergeTime = null;
+        List<TCTest> mergeTests = null;
+        for (LocalDateTime time : times) {
+            if (mergeTime == null) { //first time with tests
+                mergeTests = filterTests(tests, time);
+                if (mergeTests.size() > 0)
+                    mergeTime = time;
+            } else {
+                List<TCTest> timeTests = filterTests(tests, time);
+                if (timeTests.size() > 0 && filterTests(mergeTests, time).size()==0) { //Only merging if tests are totally separated
+                    if (timeTests.size() == mergeTests.size() && sameStatus(timeTests, time)) {
+                        TCStatus status = timeTests.get(0).getTestRun(time).getStatus();
+                        if (status == TCStatus.PASS || status == TCStatus.SKIP) {
+                            for (int t = 0; t < mergeTests.size(); t++) {
+                                TCTest mergeTest = mergeTests.get(t);
+                                mergeTest.addTestRun(time, status, "");
+                                tests.remove(timeTests.get(t));
+                            }
                         }
-                        tests.remove(skipTest);
                     }
                 }
             }
-            /*LocalDateTime mergeTime = null;
-            List<TCTest> mergeTests = null;
-            for (LocalDateTime time : times) {
-                if (mergeTime == null) { //first time
-                    mergeTime = time;
-                    mergeTests = filterTests(tests, time);
-                } else {
-                    List<TCTest> timeTests = filterTests(tests, time);
-                    /*if (timeTests.size()>0) {
-                        if (timeTests.size() == mergeTests.size() && sameStatus(timeTests, time)) {
-                            TCStatus status = timeTests.get(0).getTestRun(time).getStatus();
-                            for (int t = 0; t < mergeTests.size(); t++) {
-                                TCTest mergeTest = mergeTests.get(t);
-                                mergeTest.addTestRun(time, status, "???");
-                                tests.remove(timeTests.get(t));
-                            }
-                        } else*/
-                    /*if (timeTests.size() == 1) {
-                        TCTest tcTest = timeTests.get(0);
-                        if (tcTest.getParameters().isEmpty()) { //Skipped runs that have no parameters due to dependency failure
-                            List<TCTestRun> skipRuns = tcTest.getRuns(TCStatus.SKIP);
-                            if (skipRuns.size() == 1) {//Not all results were skipped
-                                System.out.println("Skipped "+ this.methodName + " " +  skipRuns.get(0).getStartDateTime());
-                                for (TCTest mergeTest : mergeTests) {
-                                    mergeTest.addTestRun(time, TCStatus.SKIP, tcTest.getTestRun(time).getStackTrace());
-                                }
-                                tests.remove(tcTest);
-                            }
-                        }
+        }
+    }
+
+    private void mergeSkipTests(List<TCTest> tests) {
+        TCTest skipTest = getSkipTest();
+        if (skipTest != null) {
+            List<TCTest> mergeTests = findTestsWithoutTime(tests, skipTest.getRunTimes());
+            if (!mergeTests.isEmpty()) {//There is some skip test in a method with tests with parameters
+                for (LocalDateTime skipTime : skipTest.getRunTimes()) {
+                    TCTestRun skipRun = skipTest.getTestRun(skipTime);
+
+                    for (TCTest mergeTest : mergeTests) {
+                        mergeTest.addTestRun(skipTime, TCStatus.SKIP, skipRun.getStackTrace());
                     }
-                    //}
+                    this.tests.remove(skipTest);
                 }
-            }*/
-            /*for (TCTest tcTest : tests) {
-                if (tcTest.getParameters().isEmpty()) { //Skipped runs that have no parameters due to dependency failure
-                    List<TCTestRun> skipRuns = tcTest.getRuns(TCStatus.SKIP);
-                    Set<LocalDateTime> runTimes = tcTest.getRunTimes();
-                    if (skipRuns.size() != runTimes.size()) {//Not all results were skipped
-                        LocalDateTime mergeTime = getMergeTime(runTimes, skipRuns);
-                        for (int s=0; s< skipRuns.size(); s++) {
-                            tcTest.addTestRun(mergeTime, TCStatus.SKIP, "");
-                        }
-                    }
-                }
-            }*/
+            }
         }
     }
 
@@ -179,15 +169,6 @@ public class TCMethod {
         return null;
     }
 
-    private boolean testMissingTimes(TCTest tcTest, Set<LocalDateTime> runTimes) {
-        for (LocalDateTime time : tcTest.getRunTimes()) {
-            if (!runTimes.contains(time))
-                return true;
-        }
-
-        return false;
-    }
-
     private boolean sameStatus(List<TCTest> timeTests, LocalDateTime time) {
         TCStatus status = timeTests.get(0).getTestRun(time).getStatus();
         for (TCTest timeTest : timeTests) {
@@ -205,19 +186,6 @@ public class TCMethod {
                 timeTests.add(test);
         }
         return timeTests;
-    }
-
-    private LocalDateTime getMergeTime(Set<LocalDateTime> runTimes, List<TCTestRun> tcRuns) {
-        HashSet<LocalDateTime> tcRunTimes = new HashSet<>();
-        for (TCTestRun tcTestRun: tcRuns) {
-            tcRunTimes.add(tcTestRun.getStartDateTime());
-        }
-        for (LocalDateTime runTime : runTimes) {
-            if (!tcRunTimes.contains(runTime))
-                return runTime;
-        }
-
-        return null;
     }
 
     public int getTestRunsSize() {
