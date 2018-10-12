@@ -98,10 +98,10 @@ public class TCMethod {
         if (runsSize != timesSize * testsSize) {
             mergeSkipTests(tests);
 
-            runsSize = getTestRunsSize();
+            /*runsSize = getTestRunsSize();
             testsSize = getTestsSize();
             if (runsSize != timesSize * testsSize)
-                mergePassTets(tests, times);
+                mergePassTets(tests, times);*/
         }
     }
 

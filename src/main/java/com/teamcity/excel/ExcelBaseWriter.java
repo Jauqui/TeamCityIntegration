@@ -1,15 +1,14 @@
 package com.teamcity.excel;
 
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFColor;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
 public abstract class ExcelBaseWriter {
-    protected final Workbook workbook = new XSSFWorkbook();
+    protected final Workbook workbook = new SXSSFWorkbook();
     protected final Font headerFont;
     protected final CellStyle headerCellStyle;
 
@@ -22,7 +21,7 @@ public abstract class ExcelBaseWriter {
         // Create a CellStyle with the font
         headerCellStyle = workbook.createCellStyle();
         headerCellStyle.setFont(headerFont);
-        headerCellStyle.setFillBackgroundColor(IndexedColors.BRIGHT_GREEN.getIndex());
+        headerCellStyle.setFillForegroundColor(IndexedColors.BRIGHT_GREEN.getIndex());
         headerCellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
     }
 

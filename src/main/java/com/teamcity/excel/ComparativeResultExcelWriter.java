@@ -15,7 +15,7 @@ import java.util.List;
 public class ComparativeResultExcelWriter extends ExcelBaseWriter {
     private HashMap<String, Integer> headerRows = new HashMap<>();
 
-    private List<TCMetric> metrics = Arrays.asList(TCMetric.Total_Runs, TCMetric.Pass_Percentage);
+    private List<TCMetric> metrics = Arrays.asList(TCMetric.Total_Runs, TCMetric.Pass_Percentage, TCMetric.Stability_Percentage);
 
     public ComparativeResultExcelWriter() {
         super();
@@ -85,7 +85,11 @@ public class ComparativeResultExcelWriter extends ExcelBaseWriter {
                     //Metrics
                     for (TCMetric tcMetric : metrics) {
                         int col = headerRows.get(tcMetric.getHeader());
-                        row.createCell(col).setCellValue(MetricsCalculator.processMetric(startDateTimes, tcTest, tcMetric));
+                        Cell cell = row.createCell(col);
+                        if (tcMetric.isNumeric())
+                            cell.setCellValue((double)MetricsCalculator.processMetric(startDateTimes, tcTest, tcMetric));
+                        else
+                            cell.setCellValue((String)MetricsCalculator.processMetric(startDateTimes, tcTest, tcMetric));
                     }
                 }
             }

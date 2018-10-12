@@ -25,6 +25,19 @@ import static com.teamcity.enums.TCParam.*;
 
 public class TCNavigator {
     public static final String DATE_PATTERN = "yyyyMMdd'T'HHmmssZ";
+    public static final String METHOD_CONTENT = "method-content";
+    public static final String CLASS_NAME = "class-name";
+    public static final String METHOD_NAME = "method-name";
+    public static final String PARAMETERS = "parameters";
+    public static final String STACK_TRACE = "stack-trace";
+    public static final String TEST_FAILED = "suite-Full_System_Test-class-failed";
+    public static final String TEST_SKIPPED = "suite-Full_System_Test-class-skipped";
+    public static final String TEST_PASSED = "suite-Full_System_Test-class-passed";
+    public static final String CHILDREN = "children";
+    public static final String ARTIFACTS = "artifacts";
+    public static final String FILE = "file";
+    public static final String NAME = "name";
+    public static final String TC_REST_PROJECTS = "app/rest/projects/";
     private Document document;
     private final RESTInvoker restInvoker;
 
@@ -54,7 +67,7 @@ public class TCNavigator {
     }
 
     public TCNavigator openBuildsForProject(String projectName, TCParam param, String paramValue) {
-        String projectResponse = restInvoker.getDataFromServer("app/rest/projects/" + projectName);
+        String projectResponse = restInvoker.getDataFromServer(TC_REST_PROJECTS + projectName);
         parseXMLString(projectResponse);
 
         NodeList nodeList = document.getElementsByTagName(buildType);
@@ -121,31 +134,31 @@ public class TCNavigator {
         return null;
     }
 
-    public TCResults getResultsForBuild() {
+    public TCResults getTestNGResultsForBuild() {
         LocalDateTime startDateTime = getBuildStartDate();
         LocalDateTime finishDateTime = getBuildFinishDate();
         TCResults tcResults = new TCResults();
 
-        String a_href = getElementHRefByTag("artifacts", 0);
+        String a_href = getElementHRefByTag(ARTIFACTS, 0);
         String artifactsResponse = restInvoker.getDataFromServer(a_href);
         parseXMLString(artifactsResponse);
 
         //here
-        String c_href = getElementHRefByTag("children", 0);
+        String c_href = getElementHRefByTag(CHILDREN, 0);
         if (c_href == null)
             return tcResults;
         String contentResponse = restInvoker.getDataFromServer(c_href);
         parseXMLString(contentResponse);
 
-        c_href = getElementHRefByTag("children", 0);
+        c_href = getElementHRefByTag(CHILDREN, 0);
         contentResponse = restInvoker.getDataFromServer(c_href);
         parseXMLString(contentResponse);
 
-        c_href = getElementHRefByTag("children", 0);
+        c_href = getElementHRefByTag(CHILDREN, 0);
         contentResponse = restInvoker.getDataFromServer(c_href);
         parseXMLString(contentResponse);
 
-        String i_href = getNodeHRefByTagAndProperty("file", "name", "index.html");
+        String i_href = getNodeHRefByTagAndProperty(FILE, NAME, "index.html");
         String indexResponse = restInvoker.getDataFromServer(i_href);
         parseXMLString(indexResponse);
 
@@ -154,9 +167,9 @@ public class TCNavigator {
         org.jsoup.nodes.Document htmlDoc = Jsoup.parse(htmlResponse);
 
         //add results for this build
-        addResultsFromType(htmlDoc, tcResults, startDateTime, "suite-Full_System_Test-class-failed", TCStatus.FAIL);
-        addResultsFromType(htmlDoc, tcResults, startDateTime, "suite-Full_System_Test-class-skipped", TCStatus.SKIP);
-        addResultsFromType(htmlDoc, tcResults, startDateTime, "suite-Full_System_Test-class-passed", TCStatus.PASS);
+        addResultsFromType(htmlDoc, tcResults, startDateTime, TEST_FAILED, TCStatus.FAIL);
+        addResultsFromType(htmlDoc, tcResults, startDateTime, TEST_SKIPPED, TCStatus.SKIP);
+        addResultsFromType(htmlDoc, tcResults, startDateTime, TEST_PASSED, TCStatus.PASS);
 
         return tcResults;
     }
@@ -167,19 +180,19 @@ public class TCNavigator {
         int classNumb = elementClasses.size();
         for (int element=0; element< classNumb; element++) {
             org.jsoup.nodes.Element nodeClass = elementClasses.get(element);
-            Elements testsPerClass = nodeClass.getElementsByClass("method-content");
-            Elements nodeClassName = nodeClass.getElementsByClass("class-name");
+            Elements testsPerClass = nodeClass.getElementsByClass(METHOD_CONTENT);
+            Elements nodeClassName = nodeClass.getElementsByClass(CLASS_NAME);
             String className = nodeClassName.get(0).html();
             className = className.replace("com.philips.sapphire.systemintegrationtests.", "...");
             for (int eClass = 0; eClass<testsPerClass.size(); eClass++) {
                 org.jsoup.nodes.Element elementTest = testsPerClass.get(eClass);
-                Elements methodNameClass = elementTest.getElementsByClass("method-name");
+                Elements methodNameClass = elementTest.getElementsByClass(METHOD_NAME);
                 String methodName = methodNameClass.get(0).html();
-                Elements parametersClass = elementTest.getElementsByClass("parameters");
+                Elements parametersClass = elementTest.getElementsByClass(PARAMETERS);
                 String parameters = "";
                 if (parametersClass.size() > 0)
                     parameters = parametersClass.get(0).html();
-                Elements stackTraceClass = elementTest.getElementsByClass("stack-trace");
+                Elements stackTraceClass = elementTest.getElementsByClass(STACK_TRACE);
                 String stackTrace = "";
                 if (stackTraceClass.size() > 0)
                     stackTrace = stackTraceClass.get(0).html();
@@ -188,10 +201,10 @@ public class TCNavigator {
         }
     }
 
-    public TCResults getResultsForBuild(String project, TCParam param, String paramValue, int build) {
+    public TCResults getTestNGResultsForBuild(String project, TCParam param, String paramValue, int build) {
         openBuildsForProject(project, param, paramValue);
         openBuildByIndex(build);
 
-        return getResultsForBuild();
+        return getTestNGResultsForBuild();
     }
 }

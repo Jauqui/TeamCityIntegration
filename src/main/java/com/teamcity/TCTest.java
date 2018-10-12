@@ -50,7 +50,7 @@ public class TCTest {
     public int getRunsCountWithStatus(TCStatus status) {
         int count = 0;
         for (LocalDateTime time : runs.keySet()) {
-            if (runs.get(time).getStatus() == TCStatus.PASS)
+            if (runs.get(time).getStatus() == status)
                 count++;
         }
 

@@ -28,7 +28,7 @@ public class GetLatestsResults extends TeamCityAPI {
 
         for (int b = 0; b<50; b++) {
             TCNavigator navigator = new TCNavigator(restInvoker);
-            TCResults result = navigator.getResultsForBuild(projectName, TCParam.ID, id, b);
+            TCResults result = navigator.getTestNGResultsForBuild(projectName, TCParam.ID, id, b);
             if (result.getTestStartDateTimes().size() == 0)
                 System.out.println(b + " no result");
             for (LocalDateTime startDateTime : result.getTestStartDateTimes()) {
