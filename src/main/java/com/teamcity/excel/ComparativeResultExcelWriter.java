@@ -7,17 +7,14 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 public class ComparativeResultExcelWriter extends ExcelBaseWriter {
     private HashMap<String, Integer> headerRows = new HashMap<>();
 
-    private List<TCMetric> metrics = Arrays.asList(TCMetric.Total_Runs, TCMetric.Pass_Percentage, TCMetric.Stability_Percentage);
+    private final List<TCMetric> metrics;
 
-    public ComparativeResultExcelWriter() {
+    public ComparativeResultExcelWriter(List<TCMetric> metrics) {
         super();
 
         Sheet sheet = workbook.createSheet("ComparativeResults");
@@ -35,6 +32,11 @@ public class ComparativeResultExcelWriter extends ExcelBaseWriter {
         cell = headerRow.createCell(2);
         cell.setCellValue("Paremeters");
         cell.setCellStyle(headerCellStyle);
+
+        if (metrics != null)
+            this.metrics = metrics;
+        else
+            this.metrics = new ArrayList<>();
     }
 
     public void addResult(TCResults result) {

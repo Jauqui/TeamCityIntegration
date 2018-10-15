@@ -10,15 +10,15 @@ import java.util.Map;
 
 
 public class RESTInvoker {
-    private final String baseUrl;
+    private final String domain;
     private List<String> cookies;
 
 
     public RESTInvoker(String domain, String authToken) {
-        this.baseUrl = domain;
+        this.domain = domain;
 
         try {
-            this.cookies = getToken(domain, authToken);
+            this.cookies = getCookie(domain, authToken);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -27,7 +27,7 @@ public class RESTInvoker {
     public String getDataFromServer(String path) {
         StringBuilder sb = new StringBuilder();
         try {
-            URL url = new URL(baseUrl + path);
+            URL url = new URL(domain + path);
             URLConnection urlConnection = getURLConnection(url);
             BufferedReader reader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
             String line;
@@ -50,7 +50,7 @@ public class RESTInvoker {
         return urlConnection;
     }
 
-    private List<String> getToken(String domain, String authToken) throws IOException {
+    private List<String> getCookie(String domain, String authToken) throws IOException {
         URL url = new URL(domain + "/app/rest");
         URLConnection urlConnection = url.openConnection();
         urlConnection.setRequestProperty("Authorization", authToken);

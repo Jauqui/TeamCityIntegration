@@ -5,24 +5,25 @@ import com.teamcity.enums.TCParam;
 import com.teamcity.excel.ComparativeResultExcelWriter;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 
-
-public class CompareLatestsResults extends TeamCityAPI {
+public class FormalLatestsResults extends TeamCityAPI {
     public static void main(String[] args) {
         RESTInvoker restInvoker = new RESTInvoker(baseUrl, getAuthToken());
 
-        String path = "ContinuousDeliveryPipeline_Nti_StandaloneSystemTests";
-        String name = "System Tests **standalone**";
-        List<TCMetric> metrics = Arrays.asList(TCMetric.Total_Runs, TCMetric.Pass_Percentage, TCMetric.Stability_Percentage);
+        String path = "Teams_SystemTestingTeam_FormalTestSets";
+        String name = "Formal Test Set - 1.17 Branch";
+        List<TCMetric> metrics = null;
 
         TCResults finalResult = new TCResults();
         finalResult.setMergeTests(true);
         ComparativeResultExcelWriter excelWriter = new ComparativeResultExcelWriter(metrics);
+        TCResults result = null;
+        int b = 0;
         TCNavigator navigator = new TCNavigator(restInvoker);
-        for (int b = 0; b<40; b++) {
-            TCResults result = navigator.getTestNGResultsForBuild(path, TCParam.NAME, name, b);
+        do {
+            navigator.addFilterProperty("system.Environment", "SAPPHIREQAS1");
+            result = navigator.getTestNGResultsForBuild(path, TCParam.NAME, name, b++);
 
             if (result != null && result.getTestStartDateTimes().size() > 0) {
                 for (LocalDateTime startDateTime : result.getTestStartDateTimes()) {
@@ -31,7 +32,22 @@ public class CompareLatestsResults extends TeamCityAPI {
                 finalResult.addTCResult(result);
                 excelWriter.addResult(result);
             }
-        }
+        } while (result != null);
+
+        //include personal builds
+        navigator.setPersonalBuild(true);
+        b = 0;
+        do {
+            result = navigator.getTestNGResultsForBuild(path, TCParam.NAME, name, b++);
+
+            if (result != null && result.getTestStartDateTimes().size() > 0) {
+                for (LocalDateTime startDateTime : result.getTestStartDateTimes()) {
+                    System.out.println(result.size() + " -> " + startDateTime.toString());
+                }
+                finalResult.addTCResult(result);
+                excelWriter.addResult(result);
+            }
+        } while (result != null);
 
         LocalDateTime firstDateTime = finalResult.getFirstDateTime();
         LocalDateTime lastDateTime = finalResult.getLastDateTime();

@@ -19,6 +19,8 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.teamcity.enums.TCParam.*;
 
@@ -30,9 +32,9 @@ public class TCNavigator {
     public static final String METHOD_NAME = "method-name";
     public static final String PARAMETERS = "parameters";
     public static final String STACK_TRACE = "stack-trace";
-    public static final String TEST_FAILED = "suite-Full_System_Test-class-failed";
-    public static final String TEST_SKIPPED = "suite-Full_System_Test-class-skipped";
-    public static final String TEST_PASSED = "suite-Full_System_Test-class-passed";
+    public static final String TEST_FAILED = "class-failed";
+    public static final String TEST_SKIPPED = "class-skipped";
+    public static final String TEST_PASSED = "class-passed";
     public static final String CHILDREN = "children";
     public static final String ARTIFACTS = "artifacts";
     public static final String FILE = "file";
@@ -42,10 +44,21 @@ public class TCNavigator {
     private final RESTInvoker restInvoker;
 
     private static final String buildType = "buildType";
+    private boolean personalBuild = false;
+
+    private HashMap<String, String> filterProperties = new HashMap<>();
 
 
     public TCNavigator(RESTInvoker restInvoker) {
         this.restInvoker = restInvoker;
+    }
+
+    public void addFilterProperty(String key, String value) {
+        filterProperties.put(key, value);
+    }
+
+    public void setPersonalBuild(boolean personalBuild) {
+        this.personalBuild = personalBuild;
     }
 
     private void parseXMLString(String xmlContent) {
@@ -87,17 +100,25 @@ public class TCNavigator {
         return null;
     }
 
-    public void openBuildByIndex(int index) {
+    public boolean openBuildByIndex(int index) {
         NodeList nodeList = document.getElementsByTagName("builds");
         Node buildsNode = nodeList.item(0);
         NamedNodeMap nodeMap = buildsNode.getAttributes();
         String b_href = nodeMap.getNamedItem("href").getNodeValue();
-        String response = restInvoker.getDataFromServer(b_href + "?count=" + index+1);
+        String builds_href = b_href/* + "?count=" + index+1*/;
+        if (personalBuild)
+            builds_href += "?locator=personal:true";
+        String response = restInvoker.getDataFromServer(builds_href);
         parseXMLString(response);
 
         b_href = getElementHRefByTag("build", index);
+        if (b_href == null)
+            return false;
+
         response = restInvoker.getDataFromServer(b_href);
         parseXMLString(response);
+
+        return true;
     }
 
     private String getElementHRefByTag(String tag, int index) {
@@ -137,7 +158,11 @@ public class TCNavigator {
     public TCResults getTestNGResultsForBuild() {
         LocalDateTime startDateTime = getBuildStartDate();
         LocalDateTime finishDateTime = getBuildFinishDate();
+        HashMap<String, String> properties = getBuildProperties();
+
         TCResults tcResults = new TCResults();
+        if (filterByProperties(properties))
+            return tcResults;
 
         String a_href = getElementHRefByTag(ARTIFACTS, 0);
         String artifactsResponse = restInvoker.getDataFromServer(a_href);
@@ -174,9 +199,31 @@ public class TCNavigator {
         return tcResults;
     }
 
+    private boolean filterByProperties(HashMap<String, String> properties) {
+        for (Map.Entry<String, String> filterProperty : filterProperties.entrySet()) {
+            if (!properties.get(filterProperty.getKey()).equals(filterProperty.getValue()))
+                return true;
+        }
+        return false;
+    }
+
+    private HashMap<String, String> getBuildProperties() {
+        HashMap<String, String> buildProperties = new HashMap<>();
+        NodeList propertyList = document.getElementsByTagName("property");
+        for (int bt = 0; bt < propertyList.getLength(); bt++) {
+            Node buildTypeNode = propertyList.item(bt);
+            NamedNodeMap nodeMap = buildTypeNode.getAttributes();
+            String name = nodeMap.getNamedItem("name").getNodeValue();
+            String value = nodeMap.getNamedItem("value").getNodeValue();
+            buildProperties.put(name, value);
+        }
+        return buildProperties;
+    }
+
     private void addResultsFromType(org.jsoup.nodes.Document htmlDoc, TCResults tcResults, LocalDateTime startDateTime,
                                     String elementClass, TCStatus status) {
-        Elements elementClasses = htmlDoc.getElementsByClass(elementClass);
+        String suiteName = getClassNameForStatus(htmlDoc, elementClass);
+        Elements elementClasses = htmlDoc.getElementsByClass(suiteName);
         int classNumb = elementClasses.size();
         for (int element=0; element< classNumb; element++) {
             org.jsoup.nodes.Element nodeClass = elementClasses.get(element);
@@ -201,10 +248,22 @@ public class TCNavigator {
         }
     }
 
+    private String getClassNameForStatus(org.jsoup.nodes.Document htmlDoc, String elementClass) {
+        Elements mainResultPanel = htmlDoc.getElementsByClass("main-panel-root");
+        Elements mainResultsElements = mainResultPanel.get(0).getElementsByClass("panel");
+        String suiteName = "";
+        for (int e=0; e<mainResultsElements.size(); e++)
+            if (mainResultsElements.get(e).attr("panel-name").startsWith("suite-"))
+                suiteName = mainResultsElements.get(e).attr("panel-name") + "-" + elementClass;
+        return suiteName;
+    }
+
     public TCResults getTestNGResultsForBuild(String project, TCParam param, String paramValue, int build) {
         openBuildsForProject(project, param, paramValue);
-        openBuildByIndex(build);
 
-        return getTestNGResultsForBuild();
+        if (openBuildByIndex(build))
+            return getTestNGResultsForBuild();
+
+        return null;
     }
 }
