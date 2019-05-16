@@ -223,6 +223,9 @@ public class TCNavigator {
     private void addResultsFromType(org.jsoup.nodes.Document htmlDoc, TCResults tcResults, LocalDateTime startDateTime,
                                     String elementClass, TCStatus status) {
         String suiteName = getClassNameForStatus(htmlDoc, elementClass);
+        if (suiteName.length()==0)
+            return;
+
         Elements elementClasses = htmlDoc.getElementsByClass(suiteName);
         int classNumb = elementClasses.size();
         for (int element=0; element< classNumb; element++) {
@@ -250,11 +253,13 @@ public class TCNavigator {
 
     private String getClassNameForStatus(org.jsoup.nodes.Document htmlDoc, String elementClass) {
         Elements mainResultPanel = htmlDoc.getElementsByClass("main-panel-root");
-        Elements mainResultsElements = mainResultPanel.get(0).getElementsByClass("panel");
         String suiteName = "";
-        for (int e=0; e<mainResultsElements.size(); e++)
-            if (mainResultsElements.get(e).attr("panel-name").startsWith("suite-"))
-                suiteName = mainResultsElements.get(e).attr("panel-name") + "-" + elementClass;
+        if (mainResultPanel.size()>0) {
+            Elements mainResultsElements = mainResultPanel.get(0).getElementsByClass("panel");
+            for (int e = 0; e < mainResultsElements.size(); e++)
+                if (mainResultsElements.get(e).attr("panel-name").startsWith("suite-"))
+                    suiteName = mainResultsElements.get(e).attr("panel-name") + "-" + elementClass;
+        }
         return suiteName;
     }
 

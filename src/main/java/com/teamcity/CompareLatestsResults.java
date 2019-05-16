@@ -21,7 +21,7 @@ public class CompareLatestsResults extends TeamCityAPI {
         finalResult.setMergeTests(true);
         ComparativeResultExcelWriter excelWriter = new ComparativeResultExcelWriter(metrics);
         TCNavigator navigator = new TCNavigator(restInvoker);
-        for (int b = 0; b<40; b++) {
+        for (int b = 0; b<60; b++) {
             TCResults result = navigator.getTestNGResultsForBuild(path, TCParam.NAME, name, b);
 
             if (result != null && result.getTestStartDateTimes().size() > 0) {

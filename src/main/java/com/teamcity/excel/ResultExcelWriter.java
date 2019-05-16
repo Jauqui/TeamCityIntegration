@@ -1,6 +1,7 @@
 package com.teamcity.excel;
 
 import com.teamcity.*;
+import com.teamcity.enums.TCStatus;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 
@@ -14,6 +15,9 @@ public class ResultExcelWriter extends ExcelBaseWriter {
         for (LocalDateTime startDateTime : startDateTimes) {
             // Create a Sheet
             Sheet sheet = workbook.createSheet(startDateTime.toString().replace(":", "-"));
+            Sheet sheetFail = workbook.createSheet("Fail");
+            Sheet sheetSkip = workbook.createSheet("Skip");
+            Sheet sheetPass = workbook.createSheet("Pass");
 
             // Create a Font for styling header cells
             Font headerFont = workbook.createFont();
@@ -47,6 +51,18 @@ public class ResultExcelWriter extends ExcelBaseWriter {
 
             int classRow = 1, methodRow = 1, testRow = 1, testResultRow = 1;
             for (TCClass tcClass : result.getClasses()) {
+                int classFailures = tcClass.getTestRunsSize(startDateTime, TCStatus.FAIL);
+                Row failRow = sheetFail.createRow(testResultRow++);
+                failRow.createCell(0).setCellValue(tcClass.getClassName());
+                failRow.createCell(1).setCellValue(classFailures);
+                int classSkips = tcClass.getTestRunsSize(startDateTime, TCStatus.SKIP);
+                Row skipRow = sheetSkip.createRow(testResultRow);
+                skipRow.createCell(0).setCellValue(tcClass.getClassName());
+                skipRow.createCell(1).setCellValue(classSkips);
+                int classPass = tcClass.getTestRunsSize(startDateTime, TCStatus.PASS);
+                Row passRow = sheetPass.createRow(testResultRow);
+                passRow.createCell(0).setCellValue(tcClass.getClassName());
+                passRow.createCell(1).setCellValue(classPass);
                 methodRow = classRow;
                 for (TCMethod tcMethod : tcClass.getMethods()) {
                     testRow = methodRow;
@@ -57,7 +73,10 @@ public class ResultExcelWriter extends ExcelBaseWriter {
                         row.createCell(2).setCellValue(tcTest.getParameters());
                         TCTestRun tcTestRun = tcTest.getTestRun(startDateTime);
                         row.createCell(3).setCellValue(tcTestRun.getStatus().name());
-                        row.createCell(4).setCellValue(tcTestRun.getStackTrace());
+                        if (tcTestRun.getStackTrace().length()>32000)
+                            row.createCell(4).setCellValue(tcTestRun.getStackTrace().substring(0, 32700) + "... too long");
+                        else
+                            row.createCell(4).setCellValue(tcTestRun.getStackTrace());
                         testRow++;
                     }
                     if (testRow > methodRow + 1) {
